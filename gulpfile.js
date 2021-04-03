@@ -6,12 +6,12 @@ const sass = require('gulp-sass');
 const destPath = "C:\\OpenServer\\domains\\vue.localdev\\admin";
 
 gulp.task("copy-html", () => {
-    return gulp.src("./app/src/index.html")
+    return gulp.src("./app/index.html")
         .pipe(gulp.dest(destPath));
 });
 
 gulp.task("build-sass", () => {
-    return gulp.src("./app/scss/style.scss")
+    return gulp.src("./app/scss/**/*.scss")
         .pipe(sass().on('error', sass.logError))
         .pipe(gulp.dest(destPath));
 });
@@ -30,13 +30,13 @@ gulp.task("copy-api", () => {
 });
 
 gulp.task("copy-assets", () => {
-    return gulp.src("./app/src/index.html")
+    return gulp.src("./app/assets/**/*.*")
         .pipe(gulp.dest(destPath + "\\assets\\"));
 });
 
 gulp.task("watch", () => {
-    gulp.watch("./app/src/index.html", gulp.parallel("copy-html"));
-    gulp.watch("./app/src/**/*.js", gulp.parallel("build-js"));
+    gulp.watch("./app/index.html", gulp.parallel("copy-html"));
+    gulp.watch("./app/src/main.js", gulp.parallel("build-js"));
     gulp.watch("./app/scss/**/*.scss", gulp.parallel("build-sass"));
     gulp.watch("./app/api/**/*.*", gulp.parallel("copy-api"));
     gulp.watch("./app/assets/**/*.*", gulp.parallel("copy-assets"));
