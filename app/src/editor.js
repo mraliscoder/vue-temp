@@ -1,3 +1,6 @@
+const axios = require('axios');
+const DOMHelper = require("./dom-helper");
+
 require("./iframe-load");
 
 module.exports = class Editor {
@@ -6,29 +9,42 @@ module.exports = class Editor {
     }
 
     open(page) {
-        this.iframe.load("../" + page, () => {
-            const body = this.iframe.contentDocument.body;
+        this.currentPage = page;
 
-            let textNodes = [];
+        axios.get("../" + page)
+            .then((res) => DOMHelper.parseStringToDom(res.data))
+            .then(DOMHelper.wrapTextNodes)
+            .then((dom) => {
+                this.virtualDom = dom;
+                return dom; 
+            })
+            .then(DOMHelper.serializeDomToString)
+            .then((html) => axios.post('./api/saveTempPage.php', { html }))
+            .then(() => this.iframe.load("../temp.html", () => { this.enableEditing() }))
+    }
 
-            function recursy(element) {
-                element.childNodes.forEach((node) => {
-                    if (node.nodeName === "#text" && node.nodeValue.replace(/\s+/g, "").length > 0) {
-                        textNodes.push(node);
-                    } else {
-                        recursy(node);
-                    }
-                });
+    enableEditing() {
+        console.log(this.iframe.contentDocument.body);
+
+        this.iframe.contentDocument.body.querySelectorAll("editor-element").forEach((element) => { 
+            element.contentEditable = "true";
+
+            element.oninput = () => {
+                this.onTextChange(element);
             }
-            recursy(body);
-
-            textNodes.forEach((node) => {
-                const wrapper = this.iframe.contentDocument.createElement("editor-element");
-
-                node.parentNode.replaceChild(wrapper, node);
-                wrapper.appendChild(node);
-                wrapper.contentEditable = true;
-            });
         });
+    }
+
+    onTextChange(element) {
+        const id = element.getAttribute("nodeid");
+        this.virtualDom.body.querySelector(`[nodeid="${id}"]`).innerHTML = element.innerHTML;
+    }
+
+    save() {
+        const newDom = this.virtualDom.cloneNode(this.virtualDom);
+        DOMHelper.unwrapTextNodes(newDom);
+
+        const html = DOMHelper.serializeDomToString(newDom);
+        axios.post('./api/savePage.php', { pageName: this.currentPage, html: html });
     }
 }

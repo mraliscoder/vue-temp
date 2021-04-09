@@ -24,7 +24,7 @@
                  if (!iframe) return clearInterval(timer);
                  timerCount++; 
                  if (iframe.contentDocument && iframe.contentDocument.readyState === "complete") {
-                     cleanInterval(timer); 
+                     clearInterval(timer); 
                  } else if (timerCount * interval > maxTime) {
                      reject(new Error("Iframe load failed"));
                  }
