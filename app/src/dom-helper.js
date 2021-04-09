@@ -1,7 +1,7 @@
 module.exports = class DOMHelper {
     static parseStringToDom(string) {
         const parser = new DOMParser();
-        return parser.parseFromString(string, "application/xml");
+        return parser.parseFromString(string, "text/html");
     }
 
     static serializeDomToString(dom) {
